@@ -1,5 +1,6 @@
 {
   "name": "posenet-component",
+  "homepage": "http://panzerstadt.github.io/tfjs-react-posenet",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -17,7 +18,8 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "now-build": "react-scripts build && mv build dist",
-    "deploy": "yarn build && gh-pages -d build"
+    "predeploy": "yarn build",
+    "deploy": "gh-pages -d build"
   },
   "eslintConfig": {
     "extends": "react-app"
