@@ -1,0 +1,60 @@
+/* only things that target the library slider css */
+
+.input-range {
+  margin: 0 30px;
+}
+
+/* the main track */
+.input-range__track {
+  transition: background-color 300ms ease-out;
+  background-color: rgba(250, 128, 114, 0.1);
+  height: 1.5rem;
+  margin-top: -0.75rem;
+}
+
+/* hovering over full track */
+.input-range__track:hover {
+  background-color: rgba(250, 128, 114, 0.3);
+}
+
+/* range track */
+.input-range__track--active {
+  background-color: rgba(250, 128, 114, 0.7);
+  margin-top: 0rem;
+  border-radius: 0;
+}
+
+/* .input-range__track--active:hover {
+  background-color: rgba(231, 129, 116, 0.9);
+  margin-top: 0rem;
+  border-radius: 0;
+} */
+
+/* numbers */
+.input-range__label {
+  margin-top: -1rem;
+}
+
+/* the knobs */
+.input-range__slider {
+  transition: all 150ms ease-out;
+  background-color: rgb(255, 149, 79);
+  border: none;
+  /* small size */
+  border-radius: 0;
+  height: 1.5rem;
+  width: 0.2rem;
+  margin-left: -0.15rem;
+  margin-top: -1.5rem;
+}
+
+/* the knobs when hovering over entire slider */
+.input-range__track:hover .input-range__slider {
+  /* increase size */
+  height: 1.5rem;
+  width: 1rem;
+  margin-left: -0.5rem;
+  margin-top: -1.5rem;
+
+  background-color: rgb(255, 183, 136);
+}

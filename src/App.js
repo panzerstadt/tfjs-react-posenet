@@ -74,7 +74,17 @@ class App extends Component {
               justifyContent: "space-evenly"
             }}
           >
-            <button onClick={this.onToggle}>toggle replay</button>
+            <button
+              onClick={this.onToggle}
+              style={{
+                padding: "8px 15px",
+                backgroundColor:
+                  this.state.recording.length === 0 ? "salmon" : "white",
+                color: this.state.recording.length === 0 ? "white" : "black"
+              }}
+            >
+              TOGGLE REPLAY
+            </button>
             <code>recorded frames: {this.state.recording.length}</code>
           </div>
           <hr style={{ width: "100%" }} />

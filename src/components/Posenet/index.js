@@ -14,6 +14,7 @@ import { colourNameToHex, getColorOpacityRangeHex } from "./helpers/color";
 
 // components
 import { isMobile, drawKeypoints, drawSkeleton } from "./utils";
+import Scrubber from "./helpers/SliderScrubber";
 
 export default class PoseNetComponent extends Component {
   static defaultProps = {
@@ -341,12 +342,13 @@ export class PoseNetReplay extends Component {
     stop: false,
     record: false
   };
+  onChange = this.onChange.bind(this);
 
   getCanvas = elem => {
     this.canvas = elem;
   };
 
-  drawPose() {
+  drawPose(range) {
     const { videoWidth, videoHeight } = this.props;
     const canvas = this.canvas;
     const ctx = canvas.getContext("2d");
@@ -354,10 +356,10 @@ export class PoseNetReplay extends Component {
     canvas.width = videoWidth;
     canvas.height = videoHeight;
 
-    this.poseDrawFrame(ctx);
+    this.poseDrawFrame(ctx, range);
   }
 
-  poseDrawFrame(ctx) {
+  poseDrawFrame(ctx, range) {
     const {
       minPoseConfidence,
       minPartConfidence,
@@ -374,7 +376,7 @@ export class PoseNetReplay extends Component {
     const poseDetectionFrameInner = async () => {
       let poses = [];
 
-      poses = poseRecords;
+      poses = range ? poseRecords.slice(range.min, range.max) : poseRecords;
 
       const clrRange = poses.length;
       let clr = colourNameToHex(skeletonColor) || "#cccccc";
@@ -414,6 +416,10 @@ export class PoseNetReplay extends Component {
     this.drawPose();
   }
 
+  onChange(range) {
+    this.drawPose(range);
+  }
+
   render() {
     const { poseRecords } = this.props;
 
@@ -425,11 +431,16 @@ export class PoseNetReplay extends Component {
             border: "2px solid salmon",
             backgroundColor: "#050517",
             maxWidth: 800,
-            margin: "3rem auto"
+            margin: "3rem auto",
+            overflow: "hidden"
           }}
         >
-          <canvas ref={this.getCanvas} />
+          <div>
+            <canvas ref={this.getCanvas} />
+          </div>
+          <Scrubber onChange={this.onChange} range={poseRecords.length} />
         </div>
+        <div />
 
         <div
           style={{
