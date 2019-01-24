@@ -32,15 +32,23 @@ export default class SliderScrubber extends Component {
 
   render() {
     const { range } = this.props;
+
+    const min = range ? range.min || 0 : 0;
+    const max = range ? range.max || range || 100 : 100;
+    const clampedValue = {
+      min: Math.min(Math.max(this.state.value.min, min), max - 20),
+      max: Math.min(this.state.value.max, max)
+    };
+
     return (
       <div className={styles.sliderScrubber}>
         <InputRange
           draggableTrack
-          maxValue={range ? range.max || range || 100 : 100}
-          minValue={range ? range.min || 0 : 0}
+          maxValue={max}
+          minValue={min}
           onChange={this.onChange}
           onChangeComplete={this.onChangeComplete}
-          value={this.state.value}
+          value={clampedValue}
         />
       </div>
     );

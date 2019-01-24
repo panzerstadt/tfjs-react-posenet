@@ -52,8 +52,8 @@
 .input-range__track:hover .input-range__slider {
   /* increase size */
   height: 1.5rem;
-  width: 1rem;
-  margin-left: -0.5rem;
+  width: 0.5rem;
+  margin-left: -0.25rem;
   margin-top: -1.5rem;
 
   background-color: rgb(255, 183, 136);

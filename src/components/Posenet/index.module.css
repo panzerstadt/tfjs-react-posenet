@@ -1,7 +1,7 @@
 .loading {
   position: fixed;
   z-index: 100;
-  top: 200px;
+  top: 0;
   left: 0;
   height: calc(100% - 200px);
   width: 100%;
@@ -19,4 +19,34 @@
   -webkit-transform: scaleX(-1);
   transform: scaleX(-1);
   display: none;
+}
+
+.download {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 50px;
+  width: 100%;
+  color: white;
+  background-color: black;
+
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.download:hover {
+  background-color: salmon;
+}
+
+.button {
+  height: 50px;
+  width: calc(1 / 3 * 100%);
+  outline: none;
+  border: none;
+  background-color: black;
+  color: white;
+}
+
+.button:hover {
+  background-color: salmon;
 }
