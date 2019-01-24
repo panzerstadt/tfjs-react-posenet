@@ -8,23 +8,23 @@ self.__precacheManifest = [
     "url": "/tfjs-react-posenet/static/js/runtime~main.524ce506.js"
   },
   {
-    "revision": "97dbf6a9f41794b383f4",
-    "url": "/tfjs-react-posenet/static/js/main.97dbf6a9.chunk.js"
+    "revision": "92efd8ac317ed7c91a17",
+    "url": "/tfjs-react-posenet/static/js/main.92efd8ac.chunk.js"
   },
   {
-    "revision": "70b70d3ffe247c10b4da",
-    "url": "/tfjs-react-posenet/static/js/1.70b70d3f.chunk.js"
+    "revision": "544628d5a08541ff60cd",
+    "url": "/tfjs-react-posenet/static/js/1.544628d5.chunk.js"
   },
   {
-    "revision": "97dbf6a9f41794b383f4",
-    "url": "/tfjs-react-posenet/static/css/main.8c8c0df1.chunk.css"
+    "revision": "92efd8ac317ed7c91a17",
+    "url": "/tfjs-react-posenet/static/css/main.aeaa146f.chunk.css"
   },
   {
-    "revision": "70b70d3ffe247c10b4da",
+    "revision": "544628d5a08541ff60cd",
     "url": "/tfjs-react-posenet/static/css/1.85d662f2.chunk.css"
   },
   {
-    "revision": "cd720927610a2ab25c7f7c695ef5f547",
+    "revision": "f22ae28659e307b72f6d0c06a1ca1e1b",
     "url": "/tfjs-react-posenet/index.html"
   }
 ];
