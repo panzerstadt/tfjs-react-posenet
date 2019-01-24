@@ -1,7 +1,7 @@
 {
   "main.css": "/tfjs-react-posenet/static/css/main.3564d43e.chunk.css",
-  "main.js": "/tfjs-react-posenet/static/js/main.3935a0c8.chunk.js",
-  "main.js.map": "/tfjs-react-posenet/static/js/main.3935a0c8.chunk.js.map",
+  "main.js": "/tfjs-react-posenet/static/js/main.7f9344ab.chunk.js",
+  "main.js.map": "/tfjs-react-posenet/static/js/main.7f9344ab.chunk.js.map",
   "static/css/1.481dd68d.chunk.css": "/tfjs-react-posenet/static/css/1.481dd68d.chunk.css",
   "static/js/1.e66be996.chunk.js": "/tfjs-react-posenet/static/js/1.e66be996.chunk.js",
   "static/js/1.e66be996.chunk.js.map": "/tfjs-react-posenet/static/js/1.e66be996.chunk.js.map",
@@ -11,6 +11,6 @@
   "static/media/logo.svg": "/tfjs-react-posenet/static/media/logo.5d5d9eef.svg",
   "static/css/1.481dd68d.chunk.css.map": "/tfjs-react-posenet/static/css/1.481dd68d.chunk.css.map",
   "index.html": "/tfjs-react-posenet/index.html",
-  "precache-manifest.d2c66cb61e8a4593426aca3fff6fccc3.js": "/tfjs-react-posenet/precache-manifest.d2c66cb61e8a4593426aca3fff6fccc3.js",
+  "precache-manifest.6b877de073a094d8898b4cb4557c7591.js": "/tfjs-react-posenet/precache-manifest.6b877de073a094d8898b4cb4557c7591.js",
   "service-worker.js": "/tfjs-react-posenet/service-worker.js"
 }

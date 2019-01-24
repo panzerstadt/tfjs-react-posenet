@@ -8,15 +8,15 @@ self.__precacheManifest = [
     "url": "/tfjs-react-posenet/static/js/runtime~main.524ce506.js"
   },
   {
-    "revision": "3935a0c8d00f640d2cb6",
-    "url": "/tfjs-react-posenet/static/js/main.3935a0c8.chunk.js"
+    "revision": "7f9344ab6f1345cad14f",
+    "url": "/tfjs-react-posenet/static/js/main.7f9344ab.chunk.js"
   },
   {
     "revision": "e66be9964170e3ba2206",
     "url": "/tfjs-react-posenet/static/js/1.e66be996.chunk.js"
   },
   {
-    "revision": "3935a0c8d00f640d2cb6",
+    "revision": "7f9344ab6f1345cad14f",
     "url": "/tfjs-react-posenet/static/css/main.3564d43e.chunk.css"
   },
   {
@@ -24,7 +24,7 @@ self.__precacheManifest = [
     "url": "/tfjs-react-posenet/static/css/1.481dd68d.chunk.css"
   },
   {
-    "revision": "b707b5d47857ba6f275bafcae4c6cee0",
+    "revision": "d1d18fd739cef3e844c6e368e5179a20",
     "url": "/tfjs-react-posenet/index.html"
   }
 ];
