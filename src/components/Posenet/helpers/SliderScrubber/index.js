@@ -10,13 +10,37 @@ export default class SliderScrubber extends Component {
   state = {
     value: {
       min: 10,
-      max: 50
-    }
+      max: 20
+    },
+    valueOld: {
+      min: 10,
+      max: 20,
+      diff: 0
+    },
+    snap: true
   };
+  onChangeStart = this.onChangeStart.bind(this);
   onChangeComplete = this.onChangeComplete.bind(this);
   onChange = this.onChange.bind(this);
 
+  onChangeStart(v) {
+    const vOut = {
+      min: v.min,
+      max: v.max,
+      diff: v.max - v.min
+    };
+    this.setState({ valueOld: vOut });
+  }
+
   onChangeComplete(v) {
+    if (this.state.valueOld.min === v.min) {
+      const vOut = {
+        min: v.max - this.state.valueOld.diff,
+        max: v.max
+      };
+      this.setState({ value: vOut });
+    }
+
     if (this.props.onChangeComplete) {
       this.props.onChangeComplete(v);
     }
@@ -47,8 +71,9 @@ export default class SliderScrubber extends Component {
           maxValue={max}
           minValue={min}
           onChange={this.onChange}
+          onChangeStart={this.onChangeStart}
           onChangeComplete={this.onChangeComplete}
-          value={clampedValue}
+          value={this.state.value}
         />
       </div>
     );

@@ -32,7 +32,7 @@ export default class PoseNetComponent extends Component {
     showPoints: true,
     minPoseConfidence: 0.1,
     minPartConfidence: 0.5,
-    maxPoseDetections: 2,
+    maxPoseDetections: 10,
     nmsRadius: 20.0,
     outputStride: 16,
     imageScaleFactor: 0.5,
@@ -304,8 +304,8 @@ export default class PoseNetComponent extends Component {
 
   async componentDidMount() {
     this.net = await posenet.load(this.props.mobileNetArchitecture);
-    console.log("loaded mobilenet");
-    console.log(this.net);
+    //console.log("loaded mobilenet");
+    //console.log(this.net);
 
     try {
       this.camera = await this.setupCamera();
@@ -373,7 +373,8 @@ export class PoseNetReplay extends Component {
     loadingText: "Loading pose detector...",
     frontCamera: true,
     stop: false,
-    record: false
+    record: false,
+    additionalOptions: true
   };
   state = {
     loadedPoseRecords: [],
@@ -549,88 +550,106 @@ export class PoseNetReplay extends Component {
       poseVideo = this.state.loadedPoseVideo;
     }
 
+    const additional_buttons = (
+      <div className={styles.contextualOptionsDiv}>
+        <div className={styles.contextualOptions}>
+          {poseRecords.length > 1 ? (
+            <div>
+              <div
+                className={styles.download}
+                style={{
+                  maxWidth: 800,
+
+                  margin: "0 auto",
+                  display: "flex"
+                }}
+              >
+                <button
+                  className={styles.button}
+                  onClick={() =>
+                    download(
+                      JSON.stringify({
+                        poseRecords: poseRecords,
+                        poseVideo: []
+                      }),
+                      "temp.json"
+                    )
+                  }
+                >
+                  download data
+                </button>
+
+                <button
+                  className={styles.button}
+                  onClick={async () => {
+                    await sendEmail({
+                      subject: "GWARA GWARA!",
+                      message: "I challenge you! GAWRRR!",
+                      from: "Rahmat Hidayat"
+                    });
+                    alert("challenge sent!");
+                  }}
+                >
+                  send challenge
+                </button>
+                <button
+                  className={styles.button}
+                  onClick={() => {
+                    console.log("clearing records!");
+
+                    return this.setState({
+                      loadedPoseRecords: [],
+                      loadedPoseVideo: []
+                    });
+                  }}
+                >
+                  clear data
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div
+              className={styles.download}
+              style={{ maxWidth: 800, padding: "10px 0", margin: "0 auto" }}
+            >
+              <input
+                type="file"
+                name="pose records upload"
+                accept=".json"
+                onChange={this.loadData}
+              />
+            </div>
+          )}
+        </div>
+      </div>
+    );
+
     return (
-      <div>
+      <div className={styles.replayDiv}>
         <div
           style={{
             backgroundColor: "#050517",
             maxWidth: 800,
-            overflow: "hidden"
+            overflow: "hidden",
+            height: "100vh"
           }}
         >
           <div>
             <canvas ref={this.getCanvas} />
           </div>
+        </div>
 
-          <Scrubber onChange={this.onChange} range={poseRecords.length} />
+        <div className={styles.scrubberDiv}>
+          <div className={styles.scrubberInnerDiv}>
+            <Scrubber onChange={this.onChange} range={poseRecords.length} />
+          </div>
         </div>
 
         {/* temporarily show image for debug */}
         {/* <div style={{ height: 300 }}>
           <div id="frame" />
         </div> */}
-        {poseRecords.length > 1 ? (
-          <div>
-            <div
-              className={styles.download}
-              style={{
-                maxWidth: 800,
-
-                margin: "0 auto",
-                display: "flex"
-              }}
-            >
-              <button
-                className={styles.button}
-                onClick={() =>
-                  download(
-                    JSON.stringify({
-                      poseRecords: poseRecords,
-                      poseVideo: []
-                    }),
-                    "temp.json"
-                  )
-                }
-              >
-                download data
-              </button>
-
-              <button
-                className={styles.button}
-                onClick={async () => {
-                  await sendEmail({
-                    subject: "GWARA GWARA!",
-                    message: "I challenge you! GAWRRR!",
-                    from: "Rahmat Hidayat"
-                  });
-                  alert("challenge sent!");
-                }}
-              >
-                send challenge
-              </button>
-              <button
-                className={styles.button}
-                onClick={() =>
-                  this.setState({ loadedPoseRecords: [], loadedPoseVideo: [] })
-                }
-              >
-                clear data
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div
-            className={styles.download}
-            style={{ maxWidth: 800, padding: "10px 0", margin: "0 auto" }}
-          >
-            <input
-              type="file"
-              name="pose records upload"
-              accept=".json"
-              onChange={this.loadData}
-            />
-          </div>
-        )}
+        {this.props.additionalOptions ? additional_buttons : ""}
 
         {DEBUG ? (
           <div
@@ -828,9 +847,9 @@ export class PoseNetMatch extends Component {
 
         if (this.props.record) {
           if (this.props.recordVideo) {
-            console.log("recording frame and video!");
+            //console.log("recording frame and video!");
           } else {
-            console.log("recording frames!");
+            //console.log("recording frames!");
           }
           // trace
           this.tracePose(poses);
