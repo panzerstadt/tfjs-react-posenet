@@ -14,7 +14,7 @@
 importScripts("https://storage.googleapis.com/workbox-cdn/releases/3.6.3/workbox-sw.js");
 
 importScripts(
-  "/tfjs-react-posenet/precache-manifest.d103c0fe7c3c530a577fc5c8c8f4ea1f.js"
+  "/tfjs-react-posenet/precache-manifest.fb894cc2444bc4207e31d3d5637ee460.js"
 );
 
 workbox.clientsClaim();
