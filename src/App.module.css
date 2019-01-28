@@ -3,6 +3,17 @@
   text-align: center;
 }
 
+.appContent {
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.contentDiv {
+  overflow: hidden;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
 .modeButtons {
   position: fixed;
   bottom: 15px;
@@ -15,29 +26,40 @@
 
 .frames {
   position: fixed;
-  bottom: 65px;
+  bottom: 75px;
   left: 0;
 
   width: 100%;
 }
 
 .warning {
-  position: fixed;
-  top: 45px;
-  left: 0;
+  max-width: 400px;
+  margin: 0 auto;
   background-color: rgba(255, 255, 255, 0.74);
 
   padding: 0 2rem;
 }
 
-.toggles {
+.warningDiv {
+  position: fixed;
+  top: 45px;
+  left: 0;
   width: 100%;
+}
+
+.toggles {
+  position: fixed;
+  top: 0;
+  width: 350px;
+  display: flex;
+  justify-content: center;
 }
 
 .toggleButton {
   border: none;
   height: 45px;
-  background-color: transparent;
+  width: 100%;
+  background-color: rgba(255, 255, 255, 0.918);
 
   padding: 10px;
   border-right: 1px solid grey;
@@ -56,7 +78,7 @@
   border-radius: 8px;
 
   box-shadow: 0 0 15px #3a3a3a36;
-  width: 80%;
+  width: 95%;
 }
 
 @media (min-width: 600px) {
@@ -72,7 +94,9 @@
 .btn {
   width: calc(1 / 3 * 100%);
   border: none;
-  height: 40px;
+  height: 50px;
+
+  font-size: 10px;
 }
 
 .btn:hover {

@@ -12,6 +12,8 @@ import PoseNet, { PoseNetReplay, PoseNetMatch } from "./components/Posenet";
 // constants
 import { COLORS } from "./lib/constants";
 
+const MAX_WIDTH = 400;
+
 class App extends Component {
   state = {
     recording: [],
@@ -21,7 +23,7 @@ class App extends Component {
     video: true,
     multipose: false,
     stop: false,
-    mode: "record",
+    mode: "replay",
     dims: {},
     hideInfo: false
   };
@@ -55,7 +57,7 @@ class App extends Component {
   }
 
   onTraceVideo(e) {
-    console.log("tracing video");
+    //console.log("tracing video");
     this.setState({ videoRecording: e });
   }
 
@@ -68,8 +70,11 @@ class App extends Component {
   }
 
   componentDidMount() {
-    this.setState({ height: window.innerHeight, width: window.innerWidth });
-    setTimeout(() => this.setState({ hideInfo: true }), 10000);
+    this.setState({
+      height: window.innerHeight,
+      width: Math.min(window.innerWidth, MAX_WIDTH)
+    });
+    setTimeout(() => this.setState({ hideInfo: true }), 20000);
   }
 
   render() {
@@ -119,18 +124,22 @@ class App extends Component {
     const MainContent = (
       <>
         <div
+          className={styles.contentDiv}
           style={{ display: this.state.mode === "replay" ? "block" : "none" }}
         >
           <PoseNetReplay
+            videoWidth={this.state.width}
+            videoHeight={this.state.height}
             poseRecords={this.state.recording}
             poseVideo={this.state.videoRecording}
             showVideo={true}
+            additionalOptions={false}
           />
         </div>
         {this.state.mode === "record" ? (
           <PoseNet
-            videoWidth={600}
-            //videoHeight={500}
+            videoWidth={this.state.width}
+            videoHeight={this.state.height}
             mobileNetArchitecture={1.01}
             outputStride={8}
             loadingText={"Loading..."}
@@ -197,18 +206,20 @@ class App extends Component {
     const InfoWarning = (
       <div
         style={{ display: this.state.hideInfo ? "none" : "initial" }}
-        className={styles.warning}
+        className={styles.warningDiv}
       >
-        <code
-          style={{
-            fontSize: 10,
-            color: "grey"
-          }}
-        >
-          * video toggle and single/multipose toggles don't seem to work while
-          camera is already running. please toggle between cameras to make it
-          work.
-        </code>
+        <div className={styles.warning}>
+          <code
+            style={{
+              fontSize: 10,
+              color: "grey"
+            }}
+          >
+            {/* and single/multipose toggles */}* video on/off toggle doesn't
+            seem to work while camera is already running. please toggle between
+            cameras to make it work.
+          </code>
+        </div>
       </div>
     );
 
@@ -216,10 +227,13 @@ class App extends Component {
 
     return (
       <div className={styles.app}>
-        <div>
+        <div className={styles.appContent}>
           <div
             className={styles.frames}
-            style={{ color: isRecordingEmpty ? "red" : "black" }}
+            style={{
+              color: isRecordingEmpty ? "red" : COLORS.secondary,
+              fontSize: 15
+            }}
           >
             <code>recorded frames: {this.state.recording.length}</code>
           </div>
