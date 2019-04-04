@@ -21,53 +21,59 @@ class App extends Component {
     replay: false,
     front: true,
     video: true,
-    multipose: true,
+    multipose: false,
     stop: false,
     mode: "record",
     dims: {},
-    hideInfo: false
+    hideInfo: false,
+    fps: 0
   };
-  onToggle = this.onToggle.bind(this);
-  onToggleFrontCamera = this.onToggleFrontCamera.bind(this);
-  onToggleVideoFeed = this.onToggleVideoFeed.bind(this);
-  onTracePose = this.onTracePose.bind(this);
-  onTraceVideo = this.onTraceVideo.bind(this);
-  onToggleMultiPose = this.onToggleMultiPose.bind(this);
-  onStartRecord = this.onStartRecord.bind(this);
-  onStopRecord = this.onStopRecord.bind(this);
+  // onToggle = this.onToggle.bind(this);
+  // onToggleFrontCamera = this.onToggleFrontCamera.bind(this);
+  // onToggleVideoFeed = this.onToggleVideoFeed.bind(this);
+  // onTracePose = this.onTracePose.bind(this);
+  // onTraceVideo = this.onTraceVideo.bind(this);
+  // onToggleMultiPose = this.onToggleMultiPose.bind(this);
+  // onStartRecord = this.onStartRecord.bind(this);
+  // onStopRecord = this.onStopRecord.bind(this);
 
-  onToggle(e) {
+  onToggle = e => {
     this.setState({ replay: !this.state.replay, mode: e });
-  }
+  };
 
-  onToggleFrontCamera() {
+  onToggleFrontCamera = () => {
     this.setState({ front: !this.state.front });
-  }
+  };
 
-  onToggleVideoFeed() {
+  onToggleVideoFeed = () => {
     this.setState({ video: !this.state.video });
-  }
+  };
 
-  onToggleMultiPose() {
+  onToggleMultiPose = () => {
     this.setState({ multipose: !this.state.multipose });
-  }
+  };
 
-  onTracePose(e) {
+  onTracePose = e => {
+    console.log(e);
     this.setState({ recording: e });
-  }
+  };
 
-  onTraceVideo(e) {
+  onTraceVideo = e => {
     //console.log("tracing video");
     this.setState({ videoRecording: e });
-  }
+  };
 
-  onStartRecord() {
+  onStartRecord = () => {
     this.setState({ record: true });
-  }
+  };
 
-  onStopRecord() {
+  onStopRecord = () => {
     this.setState({ record: false });
-  }
+  };
+
+  onFPS = e => {
+    this.setState({ fps: e });
+  };
 
   componentDidMount() {
     this.setState({
@@ -140,9 +146,9 @@ class App extends Component {
           <PoseNet
             videoWidth={this.state.width}
             videoHeight={this.state.height}
-            mobileNetArchitecture={0.5}
+            mobileNetArchitecture={1.0}
             outputStride={8}
-            imageScaleFactor={0.5}
+            imageScaleFactor={0.3}
             minPartConfidence={0.3}
             loadingText={"Loading..."}
             frontCamera={this.state.front}
@@ -152,7 +158,8 @@ class App extends Component {
             algorithm={this.state.multipose ? "multi-pose" : "single-pose"}
             record={this.state.record}
             recordVideo
-            compete={false}
+            compete={false} // tells posenet to load dance ghost
+            //onFPS={this.onFPS}
           />
         ) : (
           ""
@@ -223,6 +230,11 @@ class App extends Component {
 
     //return MainContent;
 
+    const l = this.state.recording.length;
+    const recordingTimeElapsed = this.state.recording[l - 1]
+      ? this.state.recording[l - 1].timestamp.toFixed(2)
+      : 0;
+
     return (
       <div className={styles.app}>
         <div className={styles.appContent}>
@@ -233,7 +245,12 @@ class App extends Component {
               fontSize: 15
             }}
           >
+            <code>fps: {this.state.fps}</code>
+            <br />
             <code>recorded frames: {this.state.recording.length}</code>
+            <br />
+            <code>time elapsed: {recordingTimeElapsed}s</code>
+            <br />
           </div>
 
           <div

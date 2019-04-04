@@ -36,11 +36,11 @@ export default class PoseNetComponent extends Component {
     showVideo: true,
     showSkeleton: true,
     showPoints: true,
-    minPoseConfidence: 0.1,
+    minPoseConfidence: 0.3,
     minPartConfidence: 0.5,
     maxPoseDetections: 10,
     nmsRadius: 20.0,
-    outputStride: 16,
+    outputStride: 8,
     imageScaleFactor: 0.5,
     skeletonColor: "aqua",
     ghostColor: "lightgrey",
@@ -65,70 +65,44 @@ export default class PoseNetComponent extends Component {
     score: 0,
     totalScore: 0,
     scoreOpacity: 0,
-    time: Date.now()
+    time: 0
   };
   camera = undefined;
   timeout = undefined;
   previousDelta = 0;
   lastScore = 0;
-  traceVideo = this.traceVideo.bind(this);
 
-  async componentDidUpdate(prevProps, prevState) {
-    if (prevProps !== this.props) {
-      if (prevProps.frontCamera !== this.props.frontCamera) {
-        // stop existing camera
-        this.stopCamera();
-        // setup and start
-        this.camera = await this.setupCamera();
-        this.startCamera();
-        // detect pose
-        this.detectPose();
-      }
-    }
-
-    if (prevState !== this.state) {
-      if (prevState.score !== this.state.score && this.state.score !== 0) {
-        if (this.timeout) clearTimeout(this.timeout);
-        this.setState({ scoreOpacity: 1 });
-        this.timeout = setTimeout(
-          () => this.setState({ scoreOpacity: 0 }),
-          3000
-        );
-      }
-    }
-  }
-
-  errorMessages() {
+  errorMessages = () => {
     // pipe out error messages
     if (this.props.errorMessages) {
       this.props.errorMessages(this.state.error_messages);
     }
-  }
+  };
 
   // the traced sequence
-  getPoseRecords() {
+  getPoseRecords = () => {
     if (this.props.getPoseRecords) {
       this.props.getPoseRecords(this.state.trace);
     }
-  }
+  };
 
-  getVideoRecords() {
+  getVideoRecords = () => {
     if (this.props.getVideoRecords) {
       this.props.getVideoRecords(this.state.frames);
     }
-  }
+  };
 
-  tracePose(poses) {
+  tracePose = poses => {
     if (this.props.record) {
-      this.setState({ trace: [...this.state.trace, ...poses] });
+      this.setState(prev => ({ trace: [...prev.trace, poses] }));
     }
-  }
+  };
 
-  traceVideo(blob) {
+  traceVideo = blob => {
     if (this.props.record) {
       this.setState({ frames: [...this.state.frames, blob] });
     }
-  }
+  };
 
   getCanvas = elem => {
     this.canvas = elem;
@@ -138,7 +112,7 @@ export default class PoseNetComponent extends Component {
     this.video = elem;
   };
 
-  stopCamera() {
+  stopCamera = () => {
     const cam = this.camera;
     if (cam) {
       const stream = cam.srcObject;
@@ -149,18 +123,18 @@ export default class PoseNetComponent extends Component {
       this.camera = undefined;
       this.setState({ loading: true, stop: true });
     }
-  }
+  };
 
-  startCamera() {
+  startCamera = () => {
     const cam = this.camera;
     if (cam) {
       this.setState({ loading: false, stop: false });
     } else {
       this.stopCamera();
     }
-  }
+  };
 
-  async setupCamera() {
+  setupCamera = async () => {
     // MDN: https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       const e1 =
@@ -196,9 +170,9 @@ export default class PoseNetComponent extends Component {
         resolve(video); // promise returns video
       };
     });
-  }
+  };
 
-  detectPose() {
+  detectPose = () => {
     const { videoWidth, videoHeight } = this.props;
     const canvas = this.canvas;
     const ctx = canvas.getContext("2d");
@@ -207,9 +181,9 @@ export default class PoseNetComponent extends Component {
     canvas.height = videoHeight;
 
     this.poseDetectionFrame(ctx);
-  }
+  };
 
-  poseDetectionFrame(ctx) {
+  poseDetectionFrame = ctx => {
     const {
       algorithm,
       imageScaleFactor,
@@ -230,7 +204,8 @@ export default class PoseNetComponent extends Component {
       frontCamera,
       stop,
       maxFPS,
-      compete
+      compete,
+      onFPS
     } = this.props;
 
     const net = this.net;
@@ -245,9 +220,22 @@ export default class PoseNetComponent extends Component {
       // this is to cap fps
       //requestAnimationFrame(poseDetectionFrameInner);
       requestAnimationFrame(poseDetectionFrameInner);
-      var delta = currentDelta - this.previousDelta;
-      if (maxFPS && delta < 1000 / maxFPS) {
+      const delta = parseInt(currentDelta - this.previousDelta);
+      const maxDelta = parseInt(1000 / maxFPS);
+
+      // another way to count fps
+      // see how many repeats of each second shows up on the console
+      //console.log(parseInt(performance.now() / 1000));
+
+      // ^ above == "how long did it take to get here since the last frame in ms?"
+      if (maxFPS && delta < maxDelta) {
+        // 1000 / fps == frames per millisecond
+        console.log("capped!", delta);
+
         return;
+      }
+      if (onFPS) {
+        onFPS(parseInt(1000 / delta));
       }
 
       let poses = [];
@@ -261,7 +249,7 @@ export default class PoseNetComponent extends Component {
             outputStride
           );
 
-          poses.push(pose);
+          poses = [pose];
           break;
 
         case "multi-pose":
@@ -278,6 +266,7 @@ export default class PoseNetComponent extends Component {
           break;
       }
 
+      // NEW BLACK SCREEN
       ctx.clearRect(0, 0, videoWidth, videoHeight);
 
       // SHOW VIDEO FRAME
@@ -321,7 +310,7 @@ export default class PoseNetComponent extends Component {
         if (!GHOST[this.state.ghostIndex]) {
           // end of loop
           console.log("RESET!!!!");
-          const millis = Date.now() - this.state.time;
+          const millis = performance.now() - this.state.time;
           console.log("seconds elapsed = " + Math.floor(millis / 1000));
 
           // for now, repeat loop
@@ -330,7 +319,11 @@ export default class PoseNetComponent extends Component {
             this.setState({ ghostIndex: 0 });
           } else {
             // TODO: give user the score
-            this.setState({ ghostIndex: 0, totalScore: 0, time: Date.now() });
+            this.setState({
+              ghostIndex: 0,
+              totalScore: 0,
+              time: performance.now()
+            });
           }
         }
         const g_keypoints = GHOST[this.state.ghostIndex].keypoints;
@@ -373,22 +366,36 @@ export default class PoseNetComponent extends Component {
         // clear canvas
         ctx.clearRect(0, 0, videoWidth, videoHeight);
       } else {
-        // console.log(poses);
+        const singlePose = poses.slice(0, 1);
+        // to prevent multipose from screwing data
+        // it only keeps the highest
+        // TODO: allow multi pose recordings
 
         if (this.props.record) {
+          // if record is triggered, start timer
+          if (this.state.time === 0) {
+            this.setState({ time: performance.now() });
+          }
+
           if (this.props.recordVideo) {
             console.log("recording frame and video!");
           } else {
             console.log("recording frames!");
           }
-          // trace
-          this.tracePose(poses);
+          // trace with timestamp
+          // https://stackoverflow.com/questions/8279729/calculate-fps-in-canvas-using-requestanimationframe
+          this.tracePose({
+            pose: singlePose,
+            timestamp: (performance.now() - this.state.time) / 1000
+          });
           // record video
           this.canvas.toBlob(this.traceVideo, "image/jpeg", 0.4);
 
           // stream poses to parent
           this.getPoseRecords();
           this.getVideoRecords();
+        } else if (!this.props.record && this.state.time !== 0) {
+          this.setState({ time: 0 });
         }
 
         // call next recursion
@@ -402,7 +409,7 @@ export default class PoseNetComponent extends Component {
     };
 
     poseDetectionFrameInner();
-  }
+  };
 
   async componentDidMount() {
     this.net = await posenet.load(this.props.mobileNetArchitecture);
@@ -421,6 +428,31 @@ export default class PoseNetComponent extends Component {
     }
 
     this.detectPose();
+  }
+
+  async componentDidUpdate(prevProps, prevState) {
+    if (prevProps !== this.props) {
+      if (prevProps.frontCamera !== this.props.frontCamera) {
+        // stop existing camera
+        this.stopCamera();
+        // setup and start
+        this.camera = await this.setupCamera();
+        this.startCamera();
+        // detect pose
+        this.detectPose();
+      }
+    }
+
+    if (prevState !== this.state) {
+      if (prevState.score !== this.state.score && this.state.score !== 0) {
+        if (this.timeout) clearTimeout(this.timeout);
+        this.setState({ scoreOpacity: 1 });
+        this.timeout = setTimeout(
+          () => this.setState({ scoreOpacity: 0 }),
+          3000
+        );
+      }
+    }
   }
 
   componentWillUnmount() {
@@ -512,7 +544,7 @@ export class PoseNetReplay extends Component {
     this.canvas = elem;
   };
 
-  drawPose(range) {
+  drawPose = range => {
     const { videoWidth, videoHeight } = this.props;
     const canvas = this.canvas;
     const ctx = canvas.getContext("2d");
@@ -521,9 +553,9 @@ export class PoseNetReplay extends Component {
     canvas.height = videoHeight;
 
     this.poseDrawFrame(ctx, range);
-  }
+  };
 
-  poseDrawFrame(ctx, range) {
+  poseDrawFrame = (ctx, range) => {
     const {
       minPoseConfidence,
       minPartConfidence,
@@ -600,7 +632,7 @@ export class PoseNetReplay extends Component {
       if (showVideo && poseVideo.length > 1 && poses.length > 1) {
         // turn blob into data
         const frame = document.createElement("img");
-        const url = URL.createObjectURL(video);
+        const url = window.URL.createObjectURL(video);
 
         frame.src = url;
 
@@ -635,7 +667,7 @@ export class PoseNetReplay extends Component {
     };
 
     requestAnimationFrame(poseDetectionFrameInner);
-  }
+  };
 
   componentDidMount() {
     this.drawPose();
