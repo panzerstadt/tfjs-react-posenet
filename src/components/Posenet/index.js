@@ -17,9 +17,15 @@ import { isMobile, drawKeypoints, drawSkeleton } from "./utils";
 import Scrubber from "./helpers/SliderScrubber";
 import download from "./helpers/download";
 import { sendEmail } from "./helpers/share";
+import scoreSimilarity from "./helpers/scorer";
 
 // constants
 import { DEBUG } from "../../lib/constants";
+
+// ghost (the dance move you're competing with)
+import GWARA_GIRL from "./GWARA_GIRL_2.json";
+import GWARA_RAHMAT from "./gwara-gwara-rahmat.json";
+const GHOST = GWARA_GIRL.poseRecords;
 
 export default class PoseNetComponent extends Component {
   static defaultProps = {
@@ -37,12 +43,15 @@ export default class PoseNetComponent extends Component {
     outputStride: 16,
     imageScaleFactor: 0.5,
     skeletonColor: "aqua",
+    ghostColor: "lightgrey",
     skeletonLineWidth: 2,
     loadingText: "Loading pose detector...",
     frontCamera: true,
     stop: false,
     record: false,
-    recordVideo: false
+    recordVideo: false,
+    maxFPS: 30,
+    compete: true
   };
 
   state = {
@@ -50,9 +59,18 @@ export default class PoseNetComponent extends Component {
     error_messages: "",
     stream: null,
     trace: [],
-    frames: []
+    frames: [],
+    ghostIndex: 0,
+    repeat: false,
+    score: 0,
+    totalScore: 0,
+    scoreOpacity: 0,
+    time: Date.now()
   };
   camera = undefined;
+  timeout = undefined;
+  previousDelta = 0;
+  lastScore = 0;
   traceVideo = this.traceVideo.bind(this);
 
   async componentDidUpdate(prevProps, prevState) {
@@ -65,6 +83,17 @@ export default class PoseNetComponent extends Component {
         this.startCamera();
         // detect pose
         this.detectPose();
+      }
+    }
+
+    if (prevState !== this.state) {
+      if (prevState.score !== this.state.score && this.state.score !== 0) {
+        if (this.timeout) clearTimeout(this.timeout);
+        this.setState({ scoreOpacity: 1 });
+        this.timeout = setTimeout(
+          () => this.setState({ scoreOpacity: 0 }),
+          3000
+        );
       }
     }
   }
@@ -196,9 +225,12 @@ export default class PoseNetComponent extends Component {
       showPoints,
       showSkeleton,
       skeletonColor,
+      ghostColor,
       skeletonLineWidth,
       frontCamera,
-      stop
+      stop,
+      maxFPS,
+      compete
     } = this.props;
 
     const net = this.net;
@@ -209,7 +241,15 @@ export default class PoseNetComponent extends Component {
       ? true
       : false;
 
-    const poseDetectionFrameInner = async () => {
+    const poseDetectionFrameInner = async currentDelta => {
+      // this is to cap fps
+      //requestAnimationFrame(poseDetectionFrameInner);
+      requestAnimationFrame(poseDetectionFrameInner);
+      var delta = currentDelta - this.previousDelta;
+      if (maxFPS && delta < 1000 / maxFPS) {
+        return;
+      }
+
       let poses = [];
 
       switch (algorithm) {
@@ -240,6 +280,8 @@ export default class PoseNetComponent extends Component {
 
       ctx.clearRect(0, 0, videoWidth, videoHeight);
 
+      // SHOW VIDEO FRAME
+      // ----------------
       if (showVideo) {
         ctx.save();
         if (flipped) {
@@ -251,6 +293,8 @@ export default class PoseNetComponent extends Component {
         ctx.restore();
       }
 
+      // DRAW CURRENT PREDICTION
+      // -----------------------
       // For each pose (i.e. person) detected in an image, loop through the poses
       // and draw the resulting skeleton and keypoints if over certain confidence
       // scores
@@ -271,6 +315,59 @@ export default class PoseNetComponent extends Component {
         }
       });
 
+      // DRAW GWARA GIRL
+      // ---------------
+      if (compete) {
+        if (!GHOST[this.state.ghostIndex]) {
+          // end of loop
+          console.log("RESET!!!!");
+          const millis = Date.now() - this.state.time;
+          console.log("seconds elapsed = " + Math.floor(millis / 1000));
+
+          // for now, repeat loop
+          if (this.state.repeat) {
+            // ENDLESS MODE FTW
+            this.setState({ ghostIndex: 0 });
+          } else {
+            // TODO: give user the score
+            this.setState({ ghostIndex: 0, totalScore: 0, time: Date.now() });
+          }
+        }
+        const g_keypoints = GHOST[this.state.ghostIndex].keypoints;
+        const g_score = GHOST[this.state.ghostIndex].score;
+
+        if (g_score >= minPoseConfidence) {
+          if (showPoints) {
+            drawKeypoints(g_keypoints, minPartConfidence, ghostColor, ctx);
+          }
+          if (showSkeleton) {
+            drawSkeleton(
+              g_keypoints,
+              minPartConfidence,
+              ghostColor,
+              skeletonLineWidth,
+              ctx
+            );
+          }
+        }
+
+        // SCORE USER AGAINST GHOST
+        const userPose = poses[0];
+        const similarity = scoreSimilarity(
+          userPose,
+          this.state.ghostIndex, // TODO: change this
+          GHOST
+        );
+
+        const score = parseInt(similarity.score.normalized.toFixed(2));
+        this.setState(prev => ({
+          score: score,
+          totalScore: prev.totalScore + score
+        }));
+      }
+
+      // SHOW OUTPUT
+      // -----------
       if (stop || this.state.stop || !this.camera) {
         console.log("stopping function");
         // clear canvas
@@ -295,7 +392,12 @@ export default class PoseNetComponent extends Component {
         }
 
         // call next recursion
-        requestAnimationFrame(poseDetectionFrameInner);
+        this.setState(prevState => ({
+          ...prevState,
+          ghostIndex: prevState.ghostIndex + 1
+        }));
+
+        this.previousDelta = currentDelta;
       }
     };
 
@@ -342,8 +444,27 @@ export default class PoseNetComponent extends Component {
 
     this.errorMessages();
 
+    const Score = () => {
+      if (this.state.score !== 0) this.lastScore = this.state.score;
+
+      return (
+        <div className={styles.scores}>
+          <p className={styles.totalScore}>{this.state.totalScore}</p>
+          <p
+            className={styles.score}
+            style={{
+              opacity: this.state.scoreOpacity
+            }}
+          >
+            {this.lastScore}
+          </p>
+        </div>
+      );
+    };
+
     return (
       <div className={styles.posenet}>
+        {this.props.compete && <Score />}
         {loading}
         <video playsInline ref={this.getVideo} />
         {/* <Webcam ref={this.getVideo} /> */}
@@ -369,6 +490,7 @@ export class PoseNetReplay extends Component {
     outputStride: 16,
     imageScaleFactor: 0.5,
     skeletonColor: "aqua",
+    ghostColor: "grey",
     skeletonLineWidth: 2,
     loadingText: "Loading pose detector...",
     frontCamera: true,
@@ -667,241 +789,6 @@ export class PoseNetReplay extends Component {
         ) : (
           ""
         )}
-      </div>
-    );
-  }
-}
-
-export class PoseNetMatch extends Component {
-  static defaultProps = {
-    videoWidth: 600,
-    videoHeight: 500,
-    algorithm: "single-pose",
-    mobileNetArchitecture: isMobile() ? 0.5 : 1.01,
-    showVideo: true,
-    showSkeleton: true,
-    showPoints: true,
-    minPoseConfidence: 0.1,
-    minPartConfidence: 0.5,
-    maxPoseDetections: 2,
-    nmsRadius: 20.0,
-    outputStride: 16,
-    imageScaleFactor: 0.5,
-    skeletonColor: "aqua",
-    skeletonLineWidth: 2,
-    loadingText: "Loading pose detector...",
-    frontCamera: true,
-    stop: false,
-    record: false,
-    recordVideo: false
-  };
-
-  state = {
-    loading: true,
-    error_messages: "",
-    stream: null,
-    trace: [],
-    frames: [],
-    height: 0,
-    width: 0
-  };
-  traceVideo = this.traceVideo.bind(this);
-
-  tracePose(poses) {
-    if (this.props.record) {
-      this.setState({ trace: [...this.state.trace, ...poses] });
-    }
-  }
-
-  traceVideo(blob) {
-    if (this.props.record) {
-      this.setState({ frames: [...this.state.frames, blob] });
-    }
-  }
-
-  getCanvas = elem => {
-    this.canvas = elem;
-  };
-
-  getVideo = elem => {
-    this.video = elem;
-  };
-
-  onStream(v) {
-    console.log("streaming data");
-    console.log(v);
-  }
-
-  setDims(h, w) {
-    this.setState({ height: h, width: w });
-  }
-
-  detectPose() {
-    const { width, height } = this.state;
-    const canvas = this.canvas;
-    const ctx = canvas.getContext("2d");
-
-    canvas.width = width;
-    canvas.height = height;
-
-    this.poseDetectionFrame(ctx);
-  }
-
-  poseDetectionFrame(ctx) {
-    const {
-      algorithm,
-      imageScaleFactor,
-      forceFlipHorizontal,
-      outputStride,
-      minPoseConfidence,
-      maxPoseDetections,
-      minPartConfidence,
-      nmsRadius,
-      videoWidth,
-      videoHeight,
-      showVideo,
-      showPoints,
-      showSkeleton,
-      skeletonColor,
-      skeletonLineWidth,
-      frontCamera,
-      stop
-    } = this.props;
-
-    const net = this.net;
-    const video = this.video;
-    const flipped = forceFlipHorizontal
-      ? forceFlipHorizontal
-      : frontCamera
-      ? true
-      : false;
-
-    const poseDetectionFrameInner = async () => {
-      let poses = [];
-
-      switch (algorithm) {
-        case "single-pose":
-          const pose = await net.estimateSinglePose(
-            video,
-            imageScaleFactor,
-            flipped,
-            outputStride
-          );
-
-          poses.push(pose);
-          break;
-
-        case "multi-pose":
-          poses = await net.estimateMultiplePoses(
-            video,
-            imageScaleFactor,
-            flipped,
-            outputStride,
-            maxPoseDetections,
-            minPartConfidence,
-            nmsRadius
-          );
-
-          break;
-      }
-
-      ctx.clearRect(0, 0, videoWidth, videoHeight);
-
-      if (showVideo) {
-        ctx.save();
-        if (flipped) {
-          // https://christianheilmann.com/2013/07/19/flipping-the-image-when-accessing-the-laptop-camera-with-getusermedia/
-          ctx.scale(-1, 1);
-          ctx.translate(-videoWidth, 0);
-        }
-        ctx.drawImage(video, 0, 0, videoWidth, videoHeight);
-        ctx.restore();
-      }
-
-      // For each pose (i.e. person) detected in an image, loop through the poses
-      // and draw the resulting skeleton and keypoints if over certain confidence
-      // scores
-      poses.forEach(({ score, keypoints }) => {
-        if (score >= minPoseConfidence) {
-          if (showPoints) {
-            drawKeypoints(keypoints, minPartConfidence, skeletonColor, ctx);
-          }
-          if (showSkeleton) {
-            drawSkeleton(
-              keypoints,
-              minPartConfidence,
-              skeletonColor,
-              skeletonLineWidth,
-              ctx
-            );
-          }
-        }
-      });
-
-      if (stop || this.state.stop || !this.camera) {
-        console.log("stopping function");
-        // clear canvas
-        ctx.clearRect(0, 0, videoWidth, videoHeight);
-      } else {
-        // console.log(poses);
-
-        if (this.props.record) {
-          if (this.props.recordVideo) {
-            //console.log("recording frame and video!");
-          } else {
-            //console.log("recording frames!");
-          }
-          // trace
-          this.tracePose(poses);
-          // record video
-          this.canvas.toBlob(this.traceVideo, "image/jpeg", 0.4);
-
-          // stream poses to parent
-          this.getPoseRecords();
-          this.getVideoRecords();
-        }
-
-        // call next recursion
-        requestAnimationFrame(poseDetectionFrameInner);
-      }
-    };
-
-    poseDetectionFrameInner();
-  }
-
-  async onCameraStart(stream) {
-    const track = stream.getVideoTracks()[0].getSettings();
-    this.net = await posenet.load(this.props.mobileNetArchitecture);
-
-    this.setDims(track.height, track.width);
-
-    this.onStream(stream);
-    this.detectPose();
-  }
-
-  // async componentDidMount() {
-  //   console.log("loaded mobilenet");
-  //   console.log(this.net);
-  // }
-
-  render() {
-    const width = window.innerWidth;
-    const height = window.innerHeight;
-
-    return (
-      <div>
-        <p>match</p>
-        <p>width: {width}</p>
-        <p>height: {height}</p>
-
-        <Camera
-
-        // onCameraStart={stream => {
-        //   this.onCameraStart(stream);
-        // }}
-        />
-
-        <canvas ref={this.getCanvas} />
       </div>
     );
   }

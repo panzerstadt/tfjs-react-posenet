@@ -7,7 +7,7 @@ import "./App.css";
 import styles from "./App.module.css";
 
 // components
-import PoseNet, { PoseNetReplay, PoseNetMatch } from "./components/Posenet";
+import PoseNet, { PoseNetReplay } from "./components/Posenet";
 
 // constants
 import { COLORS } from "./lib/constants";
@@ -21,9 +21,9 @@ class App extends Component {
     replay: false,
     front: true,
     video: true,
-    multipose: false,
+    multipose: true,
     stop: false,
-    mode: "replay",
+    mode: "record",
     dims: {},
     hideInfo: false
   };
@@ -133,15 +133,17 @@ class App extends Component {
             poseRecords={this.state.recording}
             poseVideo={this.state.videoRecording}
             showVideo={true}
-            additionalOptions={false}
+            additionalOptions={true}
           />
         </div>
         {this.state.mode === "record" ? (
           <PoseNet
             videoWidth={this.state.width}
             videoHeight={this.state.height}
-            mobileNetArchitecture={1.01}
+            mobileNetArchitecture={0.5}
             outputStride={8}
+            imageScaleFactor={0.5}
+            minPartConfidence={0.3}
             loadingText={"Loading..."}
             frontCamera={this.state.front}
             getPoseRecords={this.onTracePose}
@@ -150,18 +152,12 @@ class App extends Component {
             algorithm={this.state.multipose ? "multi-pose" : "single-pose"}
             record={this.state.record}
             recordVideo
+            compete={false}
           />
         ) : (
           ""
         )}
-        {this.state.mode === "compete" ? (
-          <PoseNetMatch
-            poseRecords={this.state.recording}
-            poseVideo={this.state.videoRecording}
-          />
-        ) : (
-          ""
-        )}
+        {this.state.mode === "compete" ? <p>compete</p> : ""}
       </>
     );
 
@@ -224,6 +220,8 @@ class App extends Component {
     );
 
     const isRecordingEmpty = this.state.recording.length === 0;
+
+    //return MainContent;
 
     return (
       <div className={styles.app}>

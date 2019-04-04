@@ -4,8 +4,9 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@tensorflow-models/posenet": "^0.2.3",
-    "@tensorflow/tfjs": "^0.14.1",
+    "@tensorflow-models/posenet": "^1.0.0",
+    "@tensorflow/tfjs": "^1.0.2",
+    "d3-array": "^2.0.3",
     "emailjs-com": "^2.3.2",
     "react": "^16.7.0",
     "react-dom": "^16.7.0",
@@ -20,8 +21,8 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "now-build": "react-scripts build && mv build dist",
-    "predeploy": "yarn build",
+    "now-build": "react-scripts build",
+    "predeploy": "rm -rf build && yarn build",
     "deploy": "gh-pages -d build"
   },
   "eslintConfig": {
